@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/draw"
@@ -10,11 +11,26 @@ import (
 	"strings"
 )
 
-func main() {
-	x_slices := 9
-	y_slices := 5
+var flag_x_slices, flag_y_slices int
+var flag_filename string
 
-	reader, err := os.Open("ContactSheet-001.jpg")
+func Init() {
+	log.Println("go-image-slicer: Slices an image in to individual image files")
+	flag.IntVar(&flag_x_slices, "hslices", 0, "[Required] The number of horizontal slices/blocks you require")
+	flag.IntVar(&flag_y_slices, "vslices", 0, "[Required] The number of vertical slices/blocks you require")
+	flag.StringVar(&flag_filename, "file", "", "[Required] Filename of the JPEG image file to slice")
+	flag.Parse()
+
+	if flag_x_slices == 0 || flag_y_slices == 0 || flag_filename == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+}
+
+func main() {
+	Init()
+
+	reader, err := os.Open(flag_filename)
 	outputFileNameFormat := "%03d.jpg"
 	outputFileNameIndex := 1
 
@@ -29,9 +45,9 @@ func main() {
 	}
 
 	bounds := img.Bounds()
-	log.Print(bounds)
+	log.Print("Slicing: ", flag_filename)
 
-	x_width, y_height := bounds.Dx()/x_slices, bounds.Dy()/y_slices
+	x_width, y_height := bounds.Dx()/flag_x_slices, bounds.Dy()/flag_y_slices
 
 	imgNew := image.NewRGBA(image.Rect(0, 0, x_width, y_height))
 	draw.Draw(imgNew, imgNew.Bounds(), img, image.Point{0, 480}, draw.Src)
